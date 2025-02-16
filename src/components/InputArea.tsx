@@ -133,17 +133,21 @@ const InputArea: FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
           mediaRecorderRef.current.stop();
         }
       }, recordingTime);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error accessing microphone:', error);
       setIsRecording(false);
       setRecordingProgress(0);
       setIsProcessing(false);
       
       // 권한 거부 또는 기타 오류에 대한 구체적인 메시지
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        setMessage('마이크 사용 권한이 거부되었습니다. 권한을 허용해주세요.');
-      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        setMessage('마이크를 찾을 수 없습니다. 마이크가 연결되어 있는지 확인해주세요.');
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          setMessage('마이크 사용 권한이 거부되었습니다. 권한을 허용해주세요.');
+        } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+          setMessage('마이크를 찾을 수 없습니다. 마이크가 연결되어 있는지 확인해주세요.');
+        } else {
+          setMessage('마이크 접근 중 오류가 발생했습니다. 다시 시도해주세요.');
+        }
       } else {
         setMessage('마이크 접근 중 오류가 발생했습니다. 다시 시도해주세요.');
       }
