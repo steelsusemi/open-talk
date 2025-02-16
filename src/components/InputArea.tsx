@@ -26,7 +26,6 @@ const InputArea: FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingTime, setRecordingTime] = useState(5000);
   const [recordingProgress, setRecordingProgress] = useState(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
