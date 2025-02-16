@@ -64,11 +64,10 @@ const InputArea: FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
         progressIntervalRef.current = null;
       }
 
-      setIsRecording(true);
-      setRecordingProgress(0);
-      setIsProcessing(false);
+      // 마이크 권한 요청 전에 상태 변경하지 않음
       setMessage(''); // 이전 메시지 초기화
-      
+
+      // 마이크 권한 요청
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -78,6 +77,11 @@ const InputArea: FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
           channelCount: 1
         } 
       });
+
+      // 권한이 승인된 후에 녹음 상태 변경
+      setIsRecording(true);
+      setRecordingProgress(0);
+      setIsProcessing(false);
       
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus'
@@ -129,11 +133,21 @@ const InputArea: FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
           mediaRecorderRef.current.stop();
         }
       }, recordingTime);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error accessing microphone:', error);
       setIsRecording(false);
       setRecordingProgress(0);
       setIsProcessing(false);
+      
+      // 권한 거부 또는 기타 오류에 대한 구체적인 메시지
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        setMessage('마이크 사용 권한이 거부되었습니다. 권한을 허용해주세요.');
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        setMessage('마이크를 찾을 수 없습니다. 마이크가 연결되어 있는지 확인해주세요.');
+      } else {
+        setMessage('마이크 접근 중 오류가 발생했습니다. 다시 시도해주세요.');
+      }
+
       if (mediaRecorderRef.current) {
         mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
         mediaRecorderRef.current = null;
