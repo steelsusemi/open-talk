@@ -57,8 +57,18 @@ const InputArea: FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
     try {
       setIsRecording(true);
       setRecordingProgress(0);
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 48000,
+          channelCount: 1
+        } 
+      });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
       mediaRecorderRef.current = mediaRecorder;
       const audioChunks: Blob[] = [];
 
@@ -67,7 +77,7 @@ const InputArea: FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' });
         await handleSpeechToText(audioBlob);
         stream.getTracks().forEach(track => track.stop());
         if (progressIntervalRef.current) {
@@ -80,12 +90,10 @@ const InputArea: FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
       mediaRecorder.start();
       updateProgress(Date.now());
 
-      // 녹음 시각적 피드백을 위한 오디오 요소
-      if (!audioRef.current) {
-        audioRef.current = new Audio();
+      // 오디오 피드백 방지를 위해 오디오 요소 제거
+      if (audioRef.current) {
+        audioRef.current.srcObject = null;
       }
-      audioRef.current.srcObject = stream;
-      audioRef.current.play();
 
       // 선택된 시간 후 자동 종료
       setTimeout(() => {
@@ -101,6 +109,8 @@ const InputArea: FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
   };
 
   const handleSpeechToText = async (audioBlob: Blob) => {
+    if (!isRecording) return; // 녹음이 취소된 경우 처리하지 않음
+    
     setIsProcessing(true);
     try {
       const formData = new FormData();
@@ -122,6 +132,24 @@ const InputArea: FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
     } catch (error) {
       console.error('Speech to text error:', error);
     } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current?.state === 'recording') {
+      // 녹음 중지 및 리소스 정리
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      mediaRecorderRef.current = null; // 미디어 레코더 초기화
+      
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      
+      // 상태 초기화
+      setRecordingProgress(0);
+      setIsRecording(false);
       setIsProcessing(false);
     }
   };
@@ -154,51 +182,72 @@ const InputArea: FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
                 </option>
               ))}
             </select>
-            <button
-              type="button"
-              onClick={startRecording}
-              disabled={isRecording || isProcessing || isLoading}
-              className="relative group flex-1"
-            >
-              <div className={`absolute inset-0 rounded-xl blur-md transition-opacity duration-200 group-hover:opacity-100 opacity-75 ${
-                isRecording ? 'bg-red-600' : 'bg-gradient-to-r from-blue-600 to-purple-600'
-              }`} />
-              <div className={`relative px-4 py-2 rounded-xl transform transition-all duration-200 group-hover:translate-y-[-2px] group-hover:shadow-lg ${
-                isRecording ? 'bg-red-600' : 'bg-gradient-to-r from-blue-600 to-purple-600'
-              }`}>
-                {isRecording && (
-                  <div className="absolute bottom-0 left-0 h-1 bg-white rounded-full transition-all duration-200" style={{ width: `${recordingProgress}%` }} />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 to-purple-400/0 group-hover:from-blue-400/10 group-hover:to-purple-400/10 rounded-xl transition-colors" />
-                <span className="relative flex items-center justify-center gap-2 text-white">
-                  {isRecording ? (
-                    <>
+            {isRecording ? (
+              <div className="flex gap-2 flex-1">
+                <button
+                  type="button"
+                  className="relative group flex-1"
+                >
+                  <div className="absolute inset-0 rounded-xl blur-md transition-opacity duration-200 group-hover:opacity-100 opacity-75 bg-red-600" />
+                  <div className="relative px-4 py-2 rounded-xl transform transition-all duration-200 group-hover:translate-y-[-2px] group-hover:shadow-lg bg-red-600">
+                    <div className="absolute bottom-0 left-0 h-1 bg-white rounded-full transition-all duration-200" style={{ width: `${recordingProgress}%` }} />
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-400/0 to-red-400/0 group-hover:from-red-400/10 group-hover:to-red-400/10 rounded-xl transition-colors" />
+                    <span className="relative flex items-center justify-center gap-2 text-white">
                       <span className="animate-pulse">녹음중... {Math.round((recordingTime - (recordingProgress / 100 * recordingTime)) / 1000)}초</span>
                       <div className="flex gap-1">
                         <div className="w-1 h-4 bg-white animate-equalizer-1" />
                         <div className="w-1 h-4 bg-white animate-equalizer-2" />
                         <div className="w-1 h-4 bg-white animate-equalizer-3" />
                       </div>
-                    </>
-                  ) : isProcessing ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      변환중...
                     </span>
-                  ) : (
-                    <>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={stopRecording}
+                  className="relative group px-4"
+                >
+                  <div className="absolute inset-0 rounded-xl blur-md transition-opacity duration-200 group-hover:opacity-100 opacity-75 bg-gray-600" />
+                  <div className="relative px-4 py-2 rounded-xl transform transition-all duration-200 group-hover:translate-y-[-2px] group-hover:shadow-lg bg-gray-600">
+                    <span className="relative flex items-center justify-center text-white">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      음성 입력
-                    </>
-                  )}
-                </span>
+                    </span>
+                  </div>
+                </button>
               </div>
-            </button>
+            ) : (
+              <button
+                type="button"
+                onClick={startRecording}
+                disabled={isProcessing || isLoading}
+                className="relative group flex-1"
+              >
+                <div className="absolute inset-0 rounded-xl blur-md transition-opacity duration-200 group-hover:opacity-100 opacity-75 bg-gradient-to-r from-blue-600 to-purple-600" />
+                <div className="relative px-4 py-2 rounded-xl transform transition-all duration-200 group-hover:translate-y-[-2px] group-hover:shadow-lg bg-gradient-to-r from-blue-600 to-purple-600">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 to-purple-400/0 group-hover:from-blue-400/10 group-hover:to-purple-400/10 rounded-xl transition-colors" />
+                  <span className="relative flex items-center justify-center gap-2 text-white">
+                    {isProcessing ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        변환중...
+                      </span>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                        음성 입력
+                      </>
+                    )}
+                  </span>
+                </div>
+              </button>
+            )}
           </div>
           <div className="flex gap-3">
             <div className="relative flex-1">
