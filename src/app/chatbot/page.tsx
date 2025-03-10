@@ -107,32 +107,43 @@ export default function ChatbotPage() {
       </div>
 
       <div className="relative container mx-auto px-4 py-6 max-w-4xl">
-        <nav className="mb-6 flex items-center justify-between">
-          <Link
-            href="/"
-            className="group relative px-4 py-2 overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-lg" />
-            <div className="relative flex items-center gap-2 text-gray-300 text-sm">
-              <svg
-                className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+        <nav className="mb-10 flex items-center justify-center">
+          <div className="w-full max-w-4xl flex items-center justify-between bg-gray-900/40 backdrop-blur-md rounded-xl border border-gray-800/50 px-4 py-2">
+            <div className="w-32 flex justify-start">
+              <Link
+                href="/"
+                className="group relative px-3 py-1.5 overflow-hidden rounded-lg"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
-              <span>메인으로</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-lg" />
+                <div className="relative flex items-center gap-2 text-gray-300 text-sm">
+                  <svg
+                    className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
+                  </svg>
+                  <span>메인으로</span>
+                </div>
+              </Link>
             </div>
-          </Link>
-          <div className="flex items-center gap-2 text-gray-400 bg-gray-900/30 px-3 py-1.5 rounded-lg text-xs border border-gray-800/50">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-            <span>AI 시스템 온라인</span>
+            
+            <h2 className="text-base font-medium bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent px-2 py-1 border-b border-blue-500/30">
+              AI 인터랙티브 챗봇
+            </h2>
+            
+            <div className="w-32 flex justify-end">
+              <div className="flex items-center gap-2 text-gray-400 bg-gray-900/50 px-3 py-1.5 rounded-lg text-xs border border-gray-700/50">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                <span>AI 온라인</span>
+              </div>
+            </div>
           </div>
         </nav>
 
