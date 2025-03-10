@@ -3,8 +3,8 @@ declare module 'react-markdown' {
   
   interface ReactMarkdownProps {
     children: string;
-    remarkPlugins?: any[];
-    components?: any;
+    remarkPlugins?: unknown[];
+    components?: Record<string, unknown>;
   }
   
   const ReactMarkdown: React.FC<ReactMarkdownProps>;
@@ -15,15 +15,15 @@ declare module 'react-markdown' {
 declare module 'react-syntax-highlighter' {
   import React from 'react';
   
-  export const Prism: React.FC<any>;
+  export const Prism: React.FC<Record<string, unknown>>;
 }
 
 declare module 'react-syntax-highlighter/dist/cjs/styles/prism' {
-  const vscDarkPlus: any;
+  const vscDarkPlus: Record<string, unknown>;
   export { vscDarkPlus };
 }
 
 declare module 'remark-gfm' {
-  const remarkGfm: any;
+  const remarkGfm: unknown;
   export default remarkGfm;
 } 

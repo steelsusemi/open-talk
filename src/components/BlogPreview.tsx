@@ -3,22 +3,23 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import remarkGfm from 'remark-gfm';
+import Image from 'next/image';
 
 interface BlogPreviewProps {
   content: string;
   createdAt: string;
 }
 
-// 타입 정의 추가
+// 타입 정의 개선
 type CodeProps = {
-  inline?: any;
-  className?: any;
-  children: any;
-  [key: string]: any;
+  inline?: boolean;
+  className?: string;
+  children: React.ReactNode;
+  [key: string]: unknown;
 };
 
 type ComponentProps = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 const BlogPreview: React.FC<BlogPreviewProps> = ({ content, createdAt }) => {
@@ -133,9 +134,21 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ content, createdAt }) => {
               a: (props: ComponentProps) => (
                 <a className="text-blue-400 hover:text-blue-300 underline transition-colors duration-200" {...props} />
               ),
-              img: (props: ComponentProps) => (
-                <img className="rounded-lg max-w-full my-4" alt="블로그 이미지" {...props} />
-              ),
+              img: (props: ComponentProps) => {
+                // Next/Image 컴포넌트를 사용하는 대신 일반 img 태그를 사용하되 필요한 속성을 추가합니다
+                return (
+                  <div className="my-4 rounded-lg overflow-hidden">
+                    <img 
+                      className="max-w-full rounded-lg" 
+                      alt="블로그 이미지" 
+                      width={800}
+                      height={600}
+                      loading="lazy"
+                      {...props} 
+                    />
+                  </div>
+                );
+              },
               table: (props: ComponentProps) => (
                 <div className="overflow-x-auto my-6">
                   <table className="min-w-full divide-y divide-gray-700" {...props} />
