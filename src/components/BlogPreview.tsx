@@ -6,7 +6,6 @@ import remarkGfm from 'remark-gfm';
 
 interface BlogPreviewProps {
   content: string;
-  topic: string;
   createdAt: string;
 }
 
@@ -22,7 +21,7 @@ type ComponentProps = {
   [key: string]: any;
 };
 
-const BlogPreview: React.FC<BlogPreviewProps> = ({ content, topic, createdAt }) => {
+const BlogPreview: React.FC<BlogPreviewProps> = ({ content, createdAt }) => {
   const [copied, setCopied] = useState(false);
   const [showCopyButton, setShowCopyButton] = useState(false);
 
@@ -135,7 +134,7 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ content, topic, createdAt }) 
                 <a className="text-blue-400 hover:text-blue-300 underline transition-colors duration-200" {...props} />
               ),
               img: (props: ComponentProps) => (
-                <img className="rounded-lg max-w-full my-4" {...props} />
+                <img className="rounded-lg max-w-full my-4" alt="블로그 이미지" {...props} />
               ),
               table: (props: ComponentProps) => (
                 <div className="overflow-x-auto my-6">

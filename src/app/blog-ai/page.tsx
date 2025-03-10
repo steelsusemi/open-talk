@@ -153,7 +153,6 @@ export default function BlogAiPage() {
               {!isLoading && blogResponse && (
                 <BlogPreview 
                   content={blogResponse.content} 
-                  topic={blogResponse.topic} 
                   createdAt={blogResponse.createdAt} 
                 />
               )}
