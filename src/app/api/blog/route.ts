@@ -61,7 +61,7 @@ SEO 최적화를 위해 다음 요소를 포함해주세요:
     const maxTokens = length === '짧음' ? 800 : length === '중간' ? 1500 : 2500;
     
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo', // gpt-4 대신 더 빠른 gpt-3.5-turbo 사용
+      model: 'gpt-4o', // gpt-4 대신 더 빠른 gpt-3.5-turbo 사용
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `"${topic}"에 대한 블로그 글을 작성해주세요.` }
