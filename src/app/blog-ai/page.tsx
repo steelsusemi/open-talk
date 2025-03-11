@@ -15,19 +15,34 @@ export default function BlogAiPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [blogResponse, setBlogResponse] = useState<BlogResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [currentFormData, setCurrentFormData] = useState<BlogFormData | null>(null);
 
   const handleGenerateBlog = async (formData: BlogFormData) => {
     setIsLoading(true);
     setError(null);
+    setCurrentFormData(formData); // 현재 폼 데이터 저장
     
     try {
+      // AbortController를 사용하여 타임아웃 설정
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 55000); // 55초 후 요청 중단
+      
       const response = await fetch('/api/blog', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId); // 타임아웃 해제
+      
+      // 응답이 JSON이 아닌 경우 처리
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('서버에서 유효한 응답을 받지 못했습니다. 잠시 후 다시 시도해주세요.');
+      }
       
       const data = await response.json();
       
@@ -38,7 +53,19 @@ export default function BlogAiPage() {
       setBlogResponse(data);
     } catch (err) {
       console.error('블로그 생성 오류:', err);
-      setError(err instanceof Error ? err.message : '블로그 생성 중 오류가 발생했습니다.');
+      
+      // 오류 메시지 개선
+      let errorMessage = '블로그 생성 중 오류가 발생했습니다.';
+      
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        errorMessage = '요청 시간이 초과되었습니다. 더 짧은 길이로 다시 시도해주세요.';
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -147,6 +174,14 @@ export default function BlogAiPage() {
                     AI가 고품질 블로그 콘텐츠를 작성하고 있습니다. 
                     이 과정은 약 30초에서 1분 정도 소요됩니다.
                   </p>
+                  <div className="mt-4 text-sm text-gray-500">
+                    <p>선택한 길이: <span className="text-blue-400">{currentFormData?.length || '중간'}</span></p>
+                    <p>선택한 톤: <span className="text-purple-400">{currentFormData?.tone || '전문적'}</span></p>
+                  </div>
+                  <div className="mt-6 text-xs text-gray-600">
+                    <p>긴 글이나 복잡한 주제의 경우 시간이 더 소요될 수 있습니다.</p>
+                    <p>시간 초과 시 더 짧은 길이로 다시 시도해보세요.</p>
+                  </div>
                 </div>
               )}
 

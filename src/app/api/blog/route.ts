@@ -5,6 +5,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Vercel Edge 함수의 최대 실행 시간 설정
+export const maxDuration = 60; // 최대 60초로 설정
+
 export async function POST(request: Request) {
   try {
     const { 
@@ -54,14 +57,17 @@ SEO 최적화를 위해 다음 요소를 포함해주세요:
 
 마크다운 형식으로 작성해주세요.`;
 
+    // 토큰 수 제한 및 온도 조정
+    const maxTokens = length === '짧음' ? 800 : length === '중간' ? 1500 : 2500;
+    
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo', // gpt-4 대신 더 빠른 gpt-3.5-turbo 사용
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `"${topic}"에 대한 블로그 글을 작성해주세요.` }
       ],
       temperature: 0.7,
-      max_tokens: length === '짧음' ? 1000 : length === '중간' ? 2000 : 3500,
+      max_tokens: maxTokens,
     });
 
     const blogContent = completion.choices[0].message.content;
@@ -74,11 +80,24 @@ SEO 최적화를 위해 다음 요소를 포함해주세요:
       topic,
       createdAt: new Date().toISOString()
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('OpenAI API Error:', error);
+    
+    // 오류 메시지 개선
+    let errorMessage = '블로그 생성 중 오류가 발생했습니다.';
+    let statusCode = 500;
+    
+    if (error.code === 'ETIMEDOUT' || error.code === 'ESOCKETTIMEDOUT' || error.message?.includes('timeout')) {
+      errorMessage = '블로그 생성 시간이 초과되었습니다. 더 짧은 길이로 다시 시도해주세요.';
+      statusCode = 504;
+    } else if (error.message?.includes('rate limit')) {
+      errorMessage = 'API 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.';
+      statusCode = 429;
+    }
+    
     return NextResponse.json(
-      { error: '블로그 생성 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { error: errorMessage },
+      { status: statusCode }
     );
   }
 } 
