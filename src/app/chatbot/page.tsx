@@ -200,7 +200,7 @@ export default function ChatbotPage() {
 
         <footer className="mt-6 text-center">
           <p className="text-xs text-gray-500 bg-gray-900/30 px-4 py-2 rounded-lg inline-block border border-gray-800/50">
-            OpenAI GPT-3.5 기반 | AI 생성 응답
+            OpenAI GPT-4o 기반 | AI 생성 응답
           </p>
         </footer>
       </div>

@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       : '사용자의 메시지에 적절한 언어로 응답해주세요.';
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemMessage },
         { role: 'user', content: message }
