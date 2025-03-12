@@ -4,6 +4,16 @@ import { useState } from 'react';
 import BlogForm, { BlogFormData } from '@/components/BlogForm';
 import BlogPreview from '@/components/BlogPreview';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Loader2 } from 'lucide-react';
 
 interface BlogResponse {
   content: string;
@@ -158,38 +168,26 @@ export default function BlogAiPage() {
               )}
 
               {isLoading && (
-                <div className="backdrop-blur-xl bg-gray-900/50 p-8 rounded-2xl border border-gray-700/50 shadow-lg flex flex-col items-center justify-center min-h-[400px]">
-                  <div className="relative w-20 h-20 mb-6">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full opacity-20 animate-ping"></div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full opacity-30 animate-pulse"></div>
-                    <svg className="relative w-full h-full text-blue-400 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-                    블로그 생성 중...
-                  </h3>
-                  <p className="text-gray-400 text-center max-w-md">
-                    AI가 고품질 블로그 콘텐츠를 작성하고 있습니다. 
-                    이 과정은 약 30초에서 1분 정도 소요됩니다.
-                  </p>
-                  <div className="mt-4 text-sm text-gray-500">
-                    <p>선택한 길이: <span className="text-blue-400">{currentFormData?.length || '중간'}</span></p>
-                    <p>선택한 톤: <span className="text-purple-400">{currentFormData?.tone || '전문적'}</span></p>
-                  </div>
-                  <div className="mt-6 text-xs text-gray-600">
-                    <p>긴 글이나 복잡한 주제의 경우 시간이 더 소요될 수 있습니다.</p>
-                    <p>시간 초과 시 더 짧은 길이로 다시 시도해보세요.</p>
+                <div className="flex flex-col items-center justify-center p-8 space-y-4 text-center">
+                  <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
+                  <div className="text-xl font-medium">블로그 생성 중...</div>
+                  <div className="text-gray-500 max-w-md">
+                    블로그 생성에는 약 30-60초가 소요될 수 있습니다. 
+                    {currentFormData && (
+                      <div className="mt-2">
+                        <p>주제: {currentFormData.topic}</p>
+                        <p>스타일: {currentFormData.tone}</p>
+                        <p>길이: {currentFormData.length}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
               {!isLoading && blogResponse && (
-                <BlogPreview 
-                  content={blogResponse.content} 
-                  createdAt={blogResponse.createdAt} 
-                />
+                <div className="mt-8">
+                  <BlogPreview content={blogResponse.content} createdAt={blogResponse.createdAt} />
+                </div>
               )}
 
               {!isLoading && !blogResponse && !error && (

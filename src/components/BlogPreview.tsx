@@ -3,7 +3,9 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import Image from 'next/image';
+import { ReactNode } from 'react';
 
 interface BlogPreviewProps {
   content: string;
@@ -14,12 +16,13 @@ interface BlogPreviewProps {
 type CodeProps = {
   inline?: boolean;
   className?: string;
-  children: React.ReactNode;
+  children: ReactNode;
   [key: string]: unknown;
 };
 
 type ComponentProps = {
   [key: string]: unknown;
+  children?: ReactNode;
 };
 
 const BlogPreview: React.FC<BlogPreviewProps> = ({ content, createdAt }) => {
@@ -88,70 +91,83 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ content, createdAt }) => {
         
         <div className="prose prose-invert prose-lg max-w-none">
           <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
+            remarkPlugins={[remarkGfm, remarkBreaks]}
             components={{
               code({ inline, className, children, ...props }: CodeProps) {
                 const match = /language-(\w+)/.exec(className || '');
                 return !inline && match ? (
-                  <SyntaxHighlighter
-                    style={vscDarkPlus}
-                    language={match[1]}
-                    PreTag="div"
-                    {...props}
-                  >
-                    {String(children).replace(/\n$/, '')}
-                  </SyntaxHighlighter>
+                  <div className="my-4 rounded-lg overflow-hidden">
+                    <div className="bg-gray-800 px-4 py-2 text-xs text-gray-400 border-b border-gray-700">
+                      {match[1]}
+                    </div>
+                    <SyntaxHighlighter
+                      style={vscDarkPlus}
+                      language={match[1]}
+                      PreTag="div"
+                      {...props}
+                    >
+                      {String(children).replace(/\n$/, '')}
+                    </SyntaxHighlighter>
+                  </div>
                 ) : (
-                  <code className={className} {...props}>
+                  <code className="bg-gray-800 px-1.5 py-0.5 rounded text-gray-200" {...props}>
                     {children}
                   </code>
                 );
               },
               h1: (props: ComponentProps) => (
-                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-6" {...props} />
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-6 mt-8 pb-2 border-b border-gray-800" {...props} />
               ),
               h2: (props: ComponentProps) => (
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-100 mt-8 mb-4" {...props} />
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-100 mt-10 mb-4 pb-1 border-b border-gray-800/50" {...props} />
               ),
               h3: (props: ComponentProps) => (
-                <h3 className="text-xl md:text-2xl font-semibold text-gray-200 mt-6 mb-3" {...props} />
+                <h3 className="text-xl md:text-2xl font-semibold text-gray-200 mt-8 mb-3" {...props} />
+              ),
+              h4: (props: ComponentProps) => (
+                <h4 className="text-lg md:text-xl font-semibold text-gray-300 mt-6 mb-2" {...props} />
               ),
               p: (props: ComponentProps) => (
                 <p className="text-gray-300 leading-relaxed mb-4" {...props} />
               ),
               ul: (props: ComponentProps) => (
-                <ul className="list-disc pl-6 mb-4 text-gray-300" {...props} />
+                <ul className="list-disc pl-6 mb-6 text-gray-300 space-y-2" {...props} />
               ),
               ol: (props: ComponentProps) => (
-                <ol className="list-decimal pl-6 mb-4 text-gray-300" {...props} />
+                <ol className="list-decimal pl-6 mb-6 text-gray-300 space-y-2" {...props} />
               ),
               li: (props: ComponentProps) => (
-                <li className="mb-2" {...props} />
+                <li className="mb-1" {...props} />
               ),
               blockquote: (props: ComponentProps) => (
-                <blockquote className="border-l-4 border-purple-500 pl-4 py-2 my-4 bg-gray-800/50 rounded-r-lg" {...props} />
+                <blockquote className="border-l-4 border-purple-500 pl-4 py-3 my-6 bg-gray-800/50 rounded-r-lg text-gray-300 italic" {...props} />
               ),
               a: (props: ComponentProps) => (
-                <a className="text-blue-400 hover:text-blue-300 underline transition-colors duration-200" {...props} />
+                <a className="text-blue-400 hover:text-blue-300 underline transition-colors duration-200" target="_blank" rel="noopener noreferrer" {...props} />
               ),
               img: (props: ComponentProps) => {
-                // Next/Image 컴포넌트를 사용하는 대신 일반 img 태그를 사용하되 필요한 속성을 추가합니다
+                const { alt, ...rest } = props;
+                const altText = typeof alt === 'string' ? alt : '블로그 이미지';
+                
                 return (
-                  <div className="my-4 rounded-lg overflow-hidden">
+                  <div className="my-6 rounded-lg overflow-hidden bg-gray-800/50 p-1 border border-gray-700/50">
                     <img 
-                      className="max-w-full rounded-lg" 
-                      alt="블로그 이미지" 
+                      className="max-w-full rounded-lg mx-auto" 
+                      alt={altText}
                       width={800}
                       height={600}
                       loading="lazy"
-                      {...props} 
+                      {...rest} 
                     />
+                    {altText !== "블로그 이미지" && (
+                      <p className="text-center text-sm text-gray-400 mt-2">{altText}</p>
+                    )}
                   </div>
                 );
               },
               table: (props: ComponentProps) => (
-                <div className="overflow-x-auto my-6">
-                  <table className="min-w-full divide-y divide-gray-700" {...props} />
+                <div className="my-8 overflow-x-auto rounded-lg border border-gray-700/50">
+                  <table className="min-w-full divide-y divide-gray-700 bg-gray-800/30" {...props} />
                 </div>
               ),
               thead: (props: ComponentProps) => (
@@ -161,13 +177,29 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ content, createdAt }) => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider" {...props} />
               ),
               td: (props: ComponentProps) => (
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400" {...props} />
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 border-t border-gray-700/30" {...props} />
               ),
               tr: (props: ComponentProps) => (
-                <tr className="bg-gray-900 even:bg-gray-800/50" {...props} />
+                <tr className="bg-transparent even:bg-gray-800/20" {...props} />
               ),
               hr: (props: ComponentProps) => (
-                <hr className="my-8 border-gray-700" {...props} />
+                <hr className="my-10 border-gray-700/50 border-dashed" {...props} />
+              ),
+              strong: (props: ComponentProps) => (
+                <strong className="font-bold text-blue-300" {...props} />
+              ),
+              em: (props: ComponentProps) => (
+                <em className="italic text-purple-300" {...props} />
+              ),
+              del: (props: ComponentProps) => (
+                <del className="line-through text-gray-500" {...props} />
+              ),
+              // 추가 마크다운 요소 지원
+              sup: (props: ComponentProps) => (
+                <sup className="text-xs text-gray-400" {...props} />
+              ),
+              sub: (props: ComponentProps) => (
+                <sub className="text-xs text-gray-400" {...props} />
               ),
             }}
           >
